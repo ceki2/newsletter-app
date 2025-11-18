@@ -221,7 +221,28 @@ app.get('/api/stats', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+// Provjera DATABASE_URL
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL nije postavljen!');
+  console.log('Provjeri Environment Variables u Render dashboardu');
+}
 
+// PostgreSQL baza
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+// Test baza konekcije
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ Database connection error:', err.message);
+    console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Postavljen' : 'Nije postavljen');
+  } else {
+    console.log('✅ Database connected successfully');
+    release();
+  }
+});
 // Otkaži pretplatu
 app.post('/api/unsubscribe', async (req, res) => {
   try {
